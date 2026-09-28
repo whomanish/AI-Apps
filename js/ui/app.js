@@ -1588,8 +1588,11 @@ connectSharedWorkspace().then(async client => {
     try { await boot(client); }
     catch (err) { authError.textContent = err.message; $('#authForm').hidden = false; $('#authSignout').hidden = false; }
   }
-  client.auth.onAuthStateChange(async (_event, sessionNow) => {
-    if (!sessionNow) { location.reload(); return; }
+  client.auth.onAuthStateChange(async (event, sessionNow) => {
+    // Supabase emits INITIAL_SESSION with null for a signed-out visitor.
+    // Reload only for an explicit sign-out; otherwise the login page loops.
+    if (event === 'SIGNED_OUT') { location.reload(); return; }
+    if (!sessionNow) return;
     if (!store) {
       $('#authForm').hidden = true;
       try { await boot(client); } catch (err) { authError.textContent = err.message; $('#authForm').hidden = false; }
