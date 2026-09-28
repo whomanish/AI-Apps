@@ -1,0 +1,965 @@
+{
+  "attributes": {
+    "attachments": {
+      "files": "dynamic — referenced enclosures not available in sources; modeled as placeholders the buyer attaches",
+      "known_types_static": [
+        "Spec sheets / drawings ('as per enclosure')",
+        "Terms document",
+        "Price-bid format table (Sl, Part No, Description, Qty, Rate, GST%, Total incl. GST)"
+      ]
+    },
+    "commercial_terms": {
+      "dynamic_slots": [
+        {
+          "name": "delivery_location",
+          "options": [
+            "Marketing Division, Mysore",
+            "Marketing Division, KGF"
+          ]
+        },
+        {
+          "name": "delivery_schedule_header",
+          "template": "Delivery shall be completed within [DELIVERY_SCHEDULE] from the date of the purchase order, to [DELIVERY_LOCATION].",
+          "note": "Buyer confirms; observed patterns: 30 days from PO, or 50/50 split over 90 days"
+        },
+        {
+          "name": "integrity_pact_applicable",
+          "note": "Computed: yes when estimate >= Rs 100 lakh"
+        }
+      ],
+      "static_clauses": {
+        "submission": {
+          "text": "Quotations shall be submitted through the GeM portal only. Postal quotations shall not be accepted under any circumstances.",
+          "coverage": [
+            "submission"
+          ],
+          "conditional": {
+            "kind": "channel",
+            "note": "GeM-only wording — include only after the buyer confirms the submission channel"
+          }
+        },
+        "submission_manual": {
+          "text": "Quotations shall reach the buyer by email at the contact given in this RFx, on or before the bid due date and time. Late quotations shall not be considered.",
+          "coverage": [
+            "submission"
+          ]
+        },
+        "quote_currency": {
+          "text": "Prices shall be quoted in Indian Rupees (INR) per unit, inclusive of GST. Offers not complying with this price basis shall be liable for rejection.",
+          "coverage": [
+            "price-basis"
+          ]
+        },
+        "price_basis": {
+          "text": "Prices shall be quoted on FOR BEML basis, i.e. inclusive of free delivery to the spare-parts stores of the Marketing Division at [DELIVERY_LOCATION]. Evaluation and award shall be on the FOR price only.",
+          "coverage": [
+            "price-basis",
+            "delivery"
+          ]
+        },
+        "no_negotiation": {
+          "text": "BEML shall not enter into any commercial discussion or negotiation where competition is adequate and prices are considered reasonable. Bidders are therefore required to quote their lowest non-negotiable price.",
+          "coverage": []
+        },
+        "price_validity": {
+          "text": "Quoted prices shall remain firm and valid for ninety (90) days from the date of opening of the commercial bid.",
+          "coverage": []
+        },
+        "payment": {
+          "text": "Payment shall be made 100% on the 60th day of receipt and acceptance of the materials at BEML (45th day for MSME vendors), on open account basis.",
+          "coverage": [
+            "payment"
+          ]
+        },
+        "ld_clause": {
+          "text": "Liquidated damages (and not by way of penalty) shall be levied at 0.5% of the value of the undelivered portion per week or part thereof, subject to a maximum of 5% of the value of the delayed portion. GST as applicable shall be additionally recovered on the liquidated damages amount.",
+          "coverage": []
+        },
+        "warranty": {
+          "text": "The supplier warrants the stores for twelve (12) months from the date of commissioning. Defective stores shall be replaced or rectified free of cost on FOR BEML basis within a reasonable time.",
+          "coverage": []
+        },
+        "sample_approval": {
+          "text": "Vendors who have not earlier supplied to BEML shall submit samples for approval before commencement of bulk production. Bulk supplies shall be made only after written approval of the sample by BEML.",
+          "coverage": []
+        },
+        "secrecy": {
+          "text": "All drawings, specifications and technical information furnished by BEML shall remain the property of BEML and shall be kept strictly confidential by the supplier. They shall not be disclosed to any third party nor used for any purpose other than execution of this contract.",
+          "coverage": []
+        },
+        "risk_purchase": {
+          "text": "In the event of default by the supplier, BEML reserves the right to terminate the order and procure the stores from alternate sources at the supplier's risk and cost.",
+          "coverage": []
+        },
+        "canvassing": {
+          "text": "Canvassing in any form, including submission of unsolicited letters or post-tender corrections, shall render the tender liable for summary rejection.",
+          "coverage": []
+        },
+        "manufacture_marking": {
+          "text": "The month and year of manufacture shall be legibly marked on each box in every consignment.",
+          "coverage": []
+        },
+        "emd_rule": {
+          "text": "Earnest Money Deposit of 0.5% of the estimated value shall be remitted as per GeM terms. Vendors registered as MSME are exempt from EMD on submission of a valid MSME registration certificate.",
+          "coverage": [],
+          "conditional": {
+            "kind": "confirm",
+            "note": "Propose the sourced 0.5% figure for buyer confirmation; check applicability incl. MSME exemption. Mentions GeM terms — adapt if channel is not GeM."
+          }
+        },
+        "security_deposit": {
+          "text": "The successful bidder shall furnish a Security Deposit / Performance Bank Guarantee equivalent to 10% of the total contract value within the time stipulated in the award communication.",
+          "coverage": [],
+          "conditional": {
+            "kind": "confirm",
+            "note": "Propose the sourced 10% figure for buyer confirmation; check applicability."
+          }
+        },
+        "integrity_pact": {
+          "text": "Where the estimated value of the tender is Rs. 100 lakh or more, the Integrity Pact as per the enclosed format shall be duly signed and submitted along with the techno-commercial bid.",
+          "coverage": [],
+          "conditional": {
+            "kind": "value",
+            "note": "Include only when the estimated tender value is known (>= Rs 100 lakh) or the buyer explicitly decides applicability."
+          }
+        },
+        "price_fall": {
+          "text": "The supplier undertakes that the price charged under this contract shall not exceed the price charged by the supplier for similar stores to any other buyer, including other units of BEML, during the currency of the contract. Should a lower price be offered elsewhere, such lower price shall apply to this contract, with due allowance for differences in quantity.",
+          "coverage": []
+        }
+      }
+    },
+    "evaluation": {
+      "award_rule_static": "BEML reserves full/partial award or rejection without assigning reasons",
+      "method": "L1 on FOR price; two-stage (technical bid opened first, commercial opened only for qualifiers)",
+      "thin_source_flag": "Implied by 'FOR PRICE only will be adopted' + no-negotiation clause + KGF NIT two-stage note — not stated outright. Co-pilot states as proposed default for buyer confirmation."
+    },
+    "line_items": {
+      "dynamic_fields": [
+        {
+          "name": "quantity_nos",
+          "note": "The quantity_nos values on items below are REFERENCE PROPOSALS from the source RFx (dynamic). Buyer adjusts freely in conversation; each change is a recorded buyer decision."
+        },
+        {
+          "name": "delivery_schedule_per_line",
+          "note": "Buyer sets per line in conversation."
+        }
+      ],
+      "items": [
+        {
+          "catalog_ref": "JTM0103995251",
+          "official_part_number": "JTM0103995251",
+          "description": "C/Box- 40X15X37 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 37,
+            "l": 40,
+            "w": 15
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 1500,
+          "source_ids": [
+            "rfx-2026-02-05"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995241",
+          "official_part_number": "JTM0103995241",
+          "description": "C/Box- 36X15X32 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 32,
+            "l": 36,
+            "w": 15
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 1500,
+          "source_ids": [
+            "rfx-2026-02-05"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995252",
+          "official_part_number": "JTM0103995252",
+          "description": "C/Box- 31X12X24 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 24,
+            "l": 31,
+            "w": 12
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 1500,
+          "source_ids": [
+            "rfx-2026-02-05"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995300",
+          "official_part_number": "JTM0103995300",
+          "description": "C/Box- 37X32X32 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 32,
+            "l": 37,
+            "w": 32
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 1500,
+          "source_ids": [
+            "rfx-2026-02-05"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995254",
+          "official_part_number": "JTM0103995254",
+          "description": "C/Box-15X51X37 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 37,
+            "l": 15,
+            "w": 51
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 1000,
+          "source_ids": [
+            "rfx-2025-11-19"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995211",
+          "official_part_number": "JTM0103995211",
+          "description": "C/Box-40X40X10 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 10,
+            "l": 40,
+            "w": 40
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 100,
+          "source_ids": [
+            "rfx-2025-11-19",
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995142",
+          "official_part_number": "JTM0103995142",
+          "description": "C/Box-15X15X15 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 15,
+            "l": 15,
+            "w": 15
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 750,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995143",
+          "official_part_number": "JTM0103995143",
+          "description": "C/Box-15X15X25 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 25,
+            "l": 15,
+            "w": 15
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 400,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995148",
+          "official_part_number": "JTM0103995148",
+          "description": "C/Box-60X60X50 CMS (5 PLY B-FLUTE 340GSM)",
+          "dimensions_cm": {
+            "h": 50,
+            "l": 60,
+            "w": 60
+          },
+          "flute": "B (narrow)",
+          "gsm": 340,
+          "note": "Line reads 340 GSM while the enquiry's spec text states 150 GSM layers — source inconsistency, flagged not fixed.",
+          "ply": 5,
+          "quantity_nos": 200,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995149",
+          "official_part_number": "JTM0103995149",
+          "description": "C/Box-25X25X25 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 25,
+            "l": 25,
+            "w": 25
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 200,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995150",
+          "official_part_number": "JTM0103995150",
+          "description": "C/Box-35X35X10 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 10,
+            "l": 35,
+            "w": 35
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 500,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995172",
+          "official_part_number": "JTM0103995172",
+          "description": "C/Box-35X35X35 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 35,
+            "l": 35,
+            "w": 35
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 250,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995173",
+          "official_part_number": "JTM0103995173",
+          "description": "C/Box-40X40X50 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 50,
+            "l": 40,
+            "w": 40
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 250,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995201",
+          "official_part_number": "JTM0103995201",
+          "description": "C/Box-35X35X10 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 10,
+            "l": 35,
+            "w": 35
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 400,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995202",
+          "official_part_number": "JTM0103995202",
+          "description": "C/Box-35X35X15 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 15,
+            "l": 35,
+            "w": 35
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 500,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995205",
+          "official_part_number": "JTM0103995205",
+          "description": "C/Box-45X15X35 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 35,
+            "l": 45,
+            "w": 15
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 200,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995264",
+          "official_part_number": "JTM0103995264",
+          "description": "C/Box-60X10X60 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 60,
+            "l": 60,
+            "w": 10
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 100,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995265",
+          "official_part_number": "JTM0103995265",
+          "description": "C/Box-50X10X50 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 50,
+            "l": 50,
+            "w": 10
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 100,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103995208",
+          "official_part_number": "JTM0103995208",
+          "description": "C/Box-30X30X30 CMS (5 PLY B-FLUTE 150GSM)",
+          "dimensions_cm": {
+            "h": 30,
+            "l": 30,
+            "w": 30
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 300,
+          "source_ids": [
+            "rfx-2025-10-24"
+          ],
+          "spec_regime": "five_ply_150gsm_rsc"
+        },
+        {
+          "catalog_ref": "JTM0103993221",
+          "official_part_number": "JTM0103993221",
+          "description": "C/B-35x45x06 CMS (5 PLY B FLUTE 150GSM), telescopic",
+          "dimensions_cm": {
+            "h": 6,
+            "l": 35,
+            "w": 45
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 5,
+          "quantity_nos": 250,
+          "source_ids": [
+            "rfx-2024-09-18"
+          ],
+          "spec_regime": "telescopic",
+          "style": "Telescopic box, container type 4"
+        },
+        {
+          "catalog_ref": "JTM0103993220",
+          "official_part_number": "JTM0103993220",
+          "description": "C/B-106x33x6 CMS (7 PLY B FLUTE 150GSM), telescopic",
+          "dimensions_cm": {
+            "h": 6,
+            "l": 106,
+            "w": 33
+          },
+          "flute": "B (narrow)",
+          "gsm": 150,
+          "ply": 7,
+          "quantity_nos": 350,
+          "source_ids": [
+            "rfx-2024-09-18"
+          ],
+          "spec_regime": "telescopic",
+          "style": "Telescopic box, container type 4"
+        },
+        {
+          "catalog_ref": "KGF-7PLY-01",
+          "official_part_number": null,
+          "description": "Carton box 045x025x020 cm, 7-ply B-flute 220 GSM, plastic-coated inner, BEML logo print",
+          "dimensions_cm": {
+            "h": 20,
+            "l": 45,
+            "w": 25
+          },
+          "flute": "B (narrow)",
+          "gsm": 220,
+          "inner_lining": "plastic coating",
+          "ply": 7,
+          "quantity_nos": 500,
+          "source_ids": [
+            "rfx-2025-01-24-kgf"
+          ],
+          "spec_regime": "seven_ply_220gsm_kgf"
+        },
+        {
+          "catalog_ref": "KGF-7PLY-02",
+          "official_part_number": null,
+          "description": "Carton box 053x049x022 cm, 7-ply B-flute 220 GSM, plastic-coated inner, BEML logo print",
+          "dimensions_cm": {
+            "h": 22,
+            "l": 53,
+            "w": 49
+          },
+          "flute": "B (narrow)",
+          "gsm": 220,
+          "inner_lining": "plastic coating",
+          "ply": 7,
+          "quantity_nos": 500,
+          "source_ids": [
+            "rfx-2025-01-24-kgf"
+          ],
+          "spec_regime": "seven_ply_220gsm_kgf"
+        },
+        {
+          "catalog_ref": "KGF-7PLY-03",
+          "official_part_number": null,
+          "description": "Carton box 045x027x021 cm, 7-ply B-flute 220 GSM, plastic-coated inner, BEML logo print",
+          "dimensions_cm": {
+            "h": 21,
+            "l": 45,
+            "w": 27
+          },
+          "flute": "B (narrow)",
+          "gsm": 220,
+          "inner_lining": "plastic coating",
+          "ply": 7,
+          "quantity_nos": 500,
+          "source_ids": [
+            "rfx-2025-01-24-kgf"
+          ],
+          "spec_regime": "seven_ply_220gsm_kgf"
+        },
+        {
+          "catalog_ref": "KGF-7PLY-04",
+          "official_part_number": null,
+          "description": "Carton box 016x016x012 cm, 7-ply B-flute 220 GSM, plastic-coated inner, BEML logo print",
+          "dimensions_cm": {
+            "h": 12,
+            "l": 16,
+            "w": 16
+          },
+          "flute": "B (narrow)",
+          "gsm": 220,
+          "inner_lining": "plastic coating",
+          "ply": 7,
+          "quantity_nos": 500,
+          "source_ids": [
+            "rfx-2025-01-24-kgf"
+          ],
+          "spec_regime": "seven_ply_220gsm_kgf"
+        },
+        {
+          "catalog_ref": "KGF-7PLY-05",
+          "official_part_number": null,
+          "description": "Carton box 025x025x012 cm, 7-ply B-flute 220 GSM, plastic-coated inner, BEML logo print",
+          "dimensions_cm": {
+            "h": 12,
+            "l": 25,
+            "w": 25
+          },
+          "flute": "B (narrow)",
+          "gsm": 220,
+          "inner_lining": "plastic coating",
+          "ply": 7,
+          "quantity_nos": 500,
+          "source_ids": [
+            "rfx-2025-01-24-kgf"
+          ],
+          "spec_regime": "seven_ply_220gsm_kgf"
+        },
+        {
+          "catalog_ref": "KGF-7PLY-06",
+          "official_part_number": null,
+          "description": "Carton box 022x022x015 cm, 7-ply B-flute 220 GSM, plastic-coated inner, BEML logo print",
+          "dimensions_cm": {
+            "h": 15,
+            "l": 22,
+            "w": 22
+          },
+          "flute": "B (narrow)",
+          "gsm": 220,
+          "inner_lining": "plastic coating",
+          "ply": 7,
+          "quantity_nos": 500,
+          "source_ids": [
+            "rfx-2025-01-24-kgf"
+          ],
+          "spec_regime": "seven_ply_220gsm_kgf"
+        }
+      ],
+      "static_fields": [
+        "part_number",
+        "description",
+        "dimensions_cm",
+        "ply",
+        "flute",
+        "gsm",
+        "spec_regime",
+        "style",
+        "inner_lining",
+        "source_ids"
+      ]
+    },
+    "questionnaire": {
+      "dynamic": "Included subset (buyer picks; co-pilot proposes default) · per-line instantiation from final line-item list · buyer-added custom questions (appended verbatim, marked buyer-authored)",
+      "static_bank": [
+        {
+          "id": "Q-T1",
+          "question": "Confirm item-wise compliance with the technical specification (ply, flute type, GSM, dimensions, craft paper 20 BF, hessen polythene lamination where specified). State 'Complied' against each line item quoted, or list deviations line-wise.",
+          "type": "agree_per_line",
+          "coverage": [
+            "technical-compliance"
+          ]
+        },
+        {
+          "id": "Q-T2",
+          "question": "Confirm that the BEML logo, 'Genuine Parts' marking and applicable safety symbols will be printed in dark blue on the outer layer, and that the part number and dimensions (in cm) will be printed at the bottom-right corner of each box.",
+          "type": "agree_yes_no",
+          "coverage": []
+        },
+        {
+          "id": "Q-T3",
+          "question": "If you are a new supplier to BEML, confirm that you will submit samples for approval before commencing bulk production.",
+          "type": "agree_if_applicable",
+          "coverage": []
+        },
+        {
+          "id": "Q-T4",
+          "question": "State your delivery schedule (lead time in days from the purchase order) against each line item, and confirm ex-stock availability wherever applicable.",
+          "type": "per_line",
+          "coverage": []
+        },
+        {
+          "id": "Q-T5",
+          "question": "Confirm that the month and year of manufacture will be legibly marked on each box in every consignment.",
+          "type": "agree_yes_no",
+          "coverage": []
+        },
+        {
+          "id": "Q-T6",
+          "question": "Undertake to submit test certificates, warranty certificates, fitment certificates and Certificates of Conformity along with every supply, as applicable.",
+          "type": "agree_yes_no",
+          "coverage": []
+        },
+        {
+          "id": "Q-C1",
+          "question": "Confirm acceptance of BEML's payment terms: 100% payment on the 60th day of receipt and acceptance (45th day for MSME vendors). If you seek any deviation, state your proposed terms clearly.",
+          "type": "agree_or_state",
+          "coverage": []
+        },
+        {
+          "id": "Q-C2",
+          "question": "Confirm acceptance of the liquidated damages clause: 0.5% of the undelivered value per week or part thereof, subject to a maximum of 5%.",
+          "type": "agree_yes_no",
+          "coverage": []
+        },
+        {
+          "id": "Q-C3",
+          "question": "Confirm acceptance of the risk purchase clause.",
+          "type": "agree_yes_no",
+          "coverage": []
+        },
+        {
+          "id": "Q-C4",
+          "question": "Confirm acceptance of the price fall clause: the price charged to BEML shall not be higher than that offered to any other buyer, including other BEML units, during the currency of the contract.",
+          "type": "agree_yes_no",
+          "coverage": []
+        },
+        {
+          "id": "Q-C5",
+          "question": "Confirm acceptance of the secrecy clause in respect of BEML's drawings, specifications and technical information.",
+          "type": "agree_yes_no",
+          "coverage": []
+        },
+        {
+          "id": "Q-C6",
+          "question": "Confirm remittance of the Earnest Money Deposit (0.5% of the estimated value). If claiming exemption as an MSME, upload your valid MSME registration certificate.",
+          "type": "agree_or_upload",
+          "coverage": []
+        },
+        {
+          "id": "Q-C7",
+          "question": "Confirm that you will furnish a Security Deposit / Performance Bank Guarantee equivalent to 10% of the total contract value on award of the contract.",
+          "type": "agree_yes_no",
+          "coverage": []
+        },
+        {
+          "id": "Q-G1",
+          "question": "State your GST registration number and the HSN code applicable to corrugated boxes.",
+          "type": "text",
+          "coverage": []
+        },
+        {
+          "id": "Q-G2",
+          "question": "Are you the manufacturer of the offered stores or a dealer? Dealers must upload a valid manufacturer authorisation letter.",
+          "type": "choice_or_upload",
+          "coverage": []
+        },
+        {
+          "id": "Q-G3",
+          "question": "If claiming MSME benefits (EMD exemption / 45-day payment), upload your valid MSME registration certificate.",
+          "type": "upload_if_applicable",
+          "coverage": []
+        },
+        {
+          "id": "Q-G4",
+          "question": "Declare whether your firm has been blacklisted or placed on business holiday by any PSU or government department. If yes, furnish details and the present status.",
+          "type": "declare",
+          "coverage": []
+        },
+        {
+          "id": "Q-G5",
+          "question": "State the percentage of local content in the offered stores as per the Make-in-India order, and upload supporting documents.",
+          "type": "text_or_upload",
+          "coverage": []
+        },
+        {
+          "id": "Q-G6",
+          "question": "Upload your balance sheet / turnover certificate and documents evidencing past experience and expertise in supply of similar stores (past supply to PSUs preferred).",
+          "type": "upload",
+          "coverage": []
+        },
+        {
+          "id": "Q-G7",
+          "question": "Where the bid value is Rs. 100 lakh or more, confirm acceptance and submission of the Integrity Pact as per the enclosed format.",
+          "type": "agree_if_applicable",
+          "coverage": []
+        }
+      ],
+      "thin_source_flag": "Bank synthesized from a single real 28-point vendor checklist (GEM/2025/B/5881169) + terms. Present as adapted from BEML's checklist, not as BEML standard.",
+      "demo_default_subset": [
+        "Q-T1",
+        "Q-T2",
+        "Q-T3",
+        "Q-T4",
+        "Q-T5",
+        "Q-T6",
+        "Q-C1",
+        "Q-C2",
+        "Q-C3",
+        "Q-C5",
+        "Q-C6",
+        "Q-C7",
+        "Q-G1",
+        "Q-G3",
+        "Q-G4",
+        "Q-G5"
+      ],
+      "demo_custom_question": {
+        "id": "Q-X1",
+        "question": "List your supplies of corrugated packaging to Public Sector Undertakings / government departments in the last three years, with order references.",
+        "type": "text",
+        "note": "Buyer-authored in the demo (demo-script-act1.md turn 11); appended verbatim, marked buyer-authored."
+      }
+    },
+    "rfx_header": {
+      "dynamic_slots": [
+        {
+          "name": "title",
+          "note": "Co-pilot proposes from category; buyer confirms",
+          "proposal": "Tender Enquiry — Corrugated Boxes / Carton Boxes"
+        },
+        {
+          "name": "distribution_channel",
+          "options": [
+            "GeM",
+            "Non-GeM"
+          ],
+          "note": "How vendors submit quotations. Record the buyer-confirmed channel; the submission clause follows it."
+        },
+        {
+          "name": "gem_bid_number",
+          "note": "System-generated on publish"
+        },
+        {
+          "name": "buying_unit",
+          "options": [
+            "Marketing Division, Mysore",
+            "Marketing Division, KGF"
+          ]
+        },
+        {
+          "name": "consignee_address",
+          "options": [
+            "Spare-parts stores, Marketing Division, Mysore 570018",
+            "BEML Nagar, Kolar Gold Fields, Karnataka 563115"
+          ]
+        },
+        {
+          "name": "publish_date",
+          "note": "Buyer sets in conversation"
+        },
+        {
+          "name": "bid_due_datetime",
+          "note": "Buyer sets in conversation"
+        },
+        {
+          "name": "bid_opening_datetime",
+          "note": "Buyer sets in conversation"
+        },
+        {
+          "name": "emd_amount",
+          "note": "Computed from estimate once known (rule is static)"
+        },
+        {
+          "name": "estimated_value",
+          "note": "Buyer provides, or co-pilot estimates from quantities x reference rates"
+        }
+      ],
+      "static_defaults": {
+        "bid_validity": "90 days from commercial bid opening",
+        "emd_rule": "0.5% of estimate for non-MSME; exempt for MSME",
+        "integrity_pact_threshold": "Rs 100 lakh estimate"
+      }
+    },
+    "specifications": {
+      "note": "Item -> regime mapping is carried on each line item as spec_regime (static).",
+      "static_templates": {
+        "five_ply_150gsm_rsc": {
+          "applies_to": "All JTM0103995xxx items (incl. 340 GSM line — see item note)",
+          "layers": "Top/outer 150 GSM, bottom/inner 150 GSM, middle 150 GSM, flute 150 GSM",
+          "material": "Craft paper 20 BF, narrow B-flute",
+          "printing": "Outer/top layer white or brown; NEW BEML LOGO, 'Genuine Parts', symbols in dark blue; part number + dimensions (cm) at bottom-right corner; month & year of manufacture per box",
+          "style": "Regular Slotted Container (RSC)",
+          "surface": "Pasting / lamination of hessen polythene on all boxes (white/blue)"
+        },
+        "seven_ply_220gsm_kgf": {
+          "applies_to": "KGF-7PLY-01…06",
+          "inner_lining": "Plastic coating of inner layer",
+          "layers": "7-ply narrow B-flute, 220 GSM",
+          "material": "Brown craft paper 20 BF",
+          "printing": "BEML logo, 'Genuine Parts', 50-years logo, safety symbols, from-address in dark blue"
+        },
+        "telescopic": {
+          "applies_to": "JTM0103993221 (5-ply), JTM0103993220 (7-ply)",
+          "layers": "150 GSM per layer (5-ply and 7-ply constructions)",
+          "material": "Craft paper 20 BF, narrow B-flute",
+          "printing": "White outer; BEML logo, 'Genuine Parts', symbols in dark blue",
+          "style": "Telescopic box, container type 4"
+        }
+      }
+    }
+  },
+  "meta": {
+    "buyer": "BEML Limited (Govt. of India undertaking, Ministry of Defence)",
+    "buying_units": [
+      "Marketing Division, Mysore",
+      "Marketing Division, KGF"
+    ],
+    "category": "Corrugated packaging — corrugated/carton boxes for spare-parts packing",
+    "conventions": "Every field is marked static (retrieved from ground truth, never invented), dynamic (filled per RFx from the buyer conversation), or computed. Attribute model defined in rfx-building-blocks.md.",
+    "extracted_on": "2026-09-26",
+    "fabrication_boundary": "Part numbers, dimensions, specs, quantities and commercial terms in this file are REAL (from BEML's tenders). Vendor quotes, questionnaire answers, and the 30-line RFx the co-pilot assembles are the fabricated/demo layer.",
+    "purpose": "Machine-readable ground truth for the buyer-side AI co-pilot in the Aerchain 'Kill the Quote Spreadsheet' take-home (due 2026-09-27 EOD). Structured around the 7-attribute RFx model in rfx-building-blocks.md.",
+    "restructured_on": "2026-09-26 — restructured from flat catalog seed to the 7-attribute static/dynamic model; behavioral guidance moved to the conversation-design layer.",
+    "source_rfx_count": 6,
+    "unique_line_items": 27
+  },
+  "sources": [
+    {
+      "buyer_unit": "Marketing Division, Mysore",
+      "doc_date": "2026-02-05",
+      "id": "rfx-2026-02-05",
+      "line_items": 4,
+      "title": "Tender Enquiry — Corrugated Boxes / Carton Boxes (JTM0103995251/5241/5252/5300)",
+      "url": "https://mkp.gem.gov.in/catalog_data/catalog_support_document/buyer_documents/7105438/54/78/703/CatalogAttrs/SpecificationDocument/2026/2/5/tend_terms_2026-02-05-14-14-46_e3fb6ece7f7f24df44bdb8e1555ff689.pdf"
+    },
+    {
+      "buyer_unit": "Marketing Division, Mysore",
+      "doc_date": "2025-11-19",
+      "id": "rfx-2025-11-19",
+      "line_items": 2,
+      "title": "Tender Enquiry — Corrugated Boxes / Carton Boxes (JTM0103995254/5211)",
+      "url": "https://mkp.gem.gov.in/catalog_data/catalog_support_document/buyer_documents/7105438/54/78/703/CatalogAttrs/SpecificationDocument/2025/11/19/tender_terms_2025-11-19-13-42-35_6ca89127719a5ea86d90ae8baf3d6458.pdf"
+    },
+    {
+      "buyer_unit": "Marketing Division, Mysore",
+      "doc_date": "2025-10-24",
+      "id": "rfx-2025-10-24",
+      "line_items": 14,
+      "title": "Tender Enquiry — Corrugated Boxes (JTM0103995142…5208)",
+      "url": "https://mkp.gem.gov.in/uploaded_documents/51/16/877/OrderItem/BoqDocument/2025/10/24/tender_terms_2025-10-24-11-33-46_cdf948023915f97e29824794544fa387.pdf"
+    },
+    {
+      "buyer_unit": "Marketing Division, Mysore",
+      "doc_date": "2024-09-18",
+      "id": "rfx-2024-09-18",
+      "line_items": 2,
+      "title": "Tender Terms — Corrugated Box K1 & K2 (JTM0103993221/3220, incl. 7-ply telescopic)",
+      "url": "https://mkp.gem.gov.in/catalog_data/catalog_support_document/buyer_documents/7105438/54/78/703/CatalogAttrs/SpecificationDocument/2024/9/18/tender-terms_2024-09-18-08-42-37_4205060c4c0f81dc2d4cc31db64e2d48.pdf"
+    },
+    {
+      "buyer_unit": "Marketing Division, KGF",
+      "doc_date": "2025-01-24",
+      "id": "rfx-2025-01-24-kgf",
+      "line_items": 6,
+      "title": "NIT — Corrugated boxes with BEML logo, 7-ply B-flute 220 GSM, plastic-coated inner layer",
+      "url": "https://mkp.gem.gov.in/uploaded_documents/51/16/877/OrderItem/BoqDocument/2025/1/24/nitn_2025-01-24-13-14-11_57b6bf9167e7eccb2a47fa65fb615ba0.pdf"
+    },
+    {
+      "buyer_unit": "Marketing Division (GeM bid)",
+      "doc_date": "2025-01",
+      "id": "rfx-2025-01-gem5881169",
+      "line_items": 0,
+      "note": "Sizes 'as per enclosure' (not enumerated in text layer). Value here is the 20-page NIT: full commercial terms + 28-point vendor checklist (EMD, 10% SD, integrity pact, price fall clause).",
+      "title": "GeM bid GEM/2025/B/5881169 — 7-ply corrugated boxes, BEML logo print, hessen polythene lamination",
+      "url": "https://fulfilment.gem.gov.in/contract/slafds?fileDownloadPath=SLA_UPLOAD_PATH/2025/Jan/GEM_2025_B_5881169/CLM0010/TERMSNIT_7a2241e1-dffe-42c9-bee71738120620493_jem@em.beml.co.in.pdf"
+    }
+  ]
+}

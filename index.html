@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Procurement Co-pilot</title>
+<link rel="stylesheet" href="css/app.css">
+<style>
+  [hidden]{display:none!important}
+  #authGate{position:fixed;inset:0;z-index:1000;background:#f8fafc;display:grid;place-items:center;padding:18px}
+  #authGate[hidden]{display:none}
+  #authGate .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;width:min(420px,100%);box-shadow:0 18px 50px #0f172a1a}
+  #authGate h1{font-size:20px;margin:0 0 8px}
+  body.auth-locked> :not(#authGate){visibility:hidden;pointer-events:none}
+  /* App additions on top of the v4 design system */
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 24px;background:#0f172a;color:#fff;position:sticky;top:0;z-index:20}
+  .topbar h1{font-size:16px;font-weight:650;margin:0 0 2px}
+  .topbar p{margin:0;font-size:12px;color:#94a3b8}
+  .topbar .header-brand{min-width:0}
+  .topbar .settings-cta{display:inline-flex;align-items:center;gap:7px;flex:none;padding:6px 11px;border:1px solid #475569;border-radius:8px;background:transparent;color:#e2e8f0;font-family:inherit;font-size:12px;font-weight:600;line-height:1.3;cursor:pointer}
+  .topbar .settings-cta:hover{background:#1e293b;color:#fff}
+  .topbar .settings-cta:focus-visible{outline:2px solid #93c5fd;outline-offset:2px}
+  .topbar .settings-cta svg{width:15px;height:15px;flex:none}
+  .screen{display:none;padding:18px;max-width:1280px;margin:0 auto}
+  .screen.active{display:block}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:100;display:none;max-width:90vw}
+  .toast.show{display:block}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:90;padding:16px}
+  .modal.show{display:flex}
+  .modal .card{max-width:520px;width:100%;max-height:88vh;overflow:auto}
+  .field{margin:10px 0}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .field input,.field select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;box-sizing:border-box}
+  .chat .msg.thinking{opacity:.6;font-style:italic}
+  .cmp-cheap{background:var(--green-soft);font-weight:600}
+  .cmp-missing{color:var(--muted)}
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .toggle button{border:0;background:#fff;padding:7px 12px;font-size:13px;cursor:pointer}
+  .toggle button.on{background:var(--brand);color:#fff}
+  .qitem{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:#fff}
+  .qitem .btnrow{margin-top:8px}
+  .rev-list{list-style:none;margin:6px 0;padding:0}
+  .rev-item{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:#fff}
+  .rev-item.is-omitted{opacity:.55}
+  .rev-text{font-size:13.5px;line-height:1.5}
+  .rev-n{color:var(--muted)}
+  .rev-actions{margin-top:8px}
+  .rev-editor{margin-top:8px}
+  .rev-editor textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;box-sizing:border-box;font-family:inherit}
+  .flagline{font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .btn.danger{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+  .btn.danger:hover{background:#fee2e2}
+  .btn:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed}
+  .flagline:last-child{border-bottom:0}
+  .kv{display:flex;gap:8px;font-size:13px;padding:3px 0}
+  .kv b{min-width:130px;color:var(--muted);font-weight:500}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .hscroll{overflow:auto}
+  details.raw{margin-top:8px}
+  details.raw summary{cursor:pointer;font-size:13px;color:var(--brand)}
+  @media(max-width:760px){
+    .screen{padding:12px}
+  }
+  @media(max-width:480px){.topbar{padding:14px 12px;gap:12px}}
+</style>
+</head>
+<body>
+<div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <form id="authForm" class="card">
+    <h1 id="authTitle">Shared procurement workspace</h1>
+    <p class="sub">Sign in with the team account to open the shared workspace.</p>
+    <div class="field"><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="username" required></div>
+    <div class="field"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" required></div>
+    <p id="authError" class="note" role="status"></p>
+    <button id="authSubmit" class="btn" type="submit">Sign in</button>
+  </form>
+  <button id="authSignout" class="btn ghost" type="button" hidden>Sign out</button>
+</div>
+<header class="topbar">
+  <div class="header-brand"><h1>Procurement Co-pilot</h1><p>RFx workspace</p></div>
+  <button class="settings-cta" id="settingsBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.07.07-1.87 1.87-.07-.07A1.7 1.7 0 0 0 16 18.4a1.7 1.7 0 0 0-1.26 1.54V20h-2.65v-.1a1.7 1.7 0 0 0-1.27-1.53 1.7 1.7 0 0 0-1.85.34l-.07.07-1.88-1.87.08-.07A1.7 1.7 0 0 0 7.42 15a1.7 1.7 0 0 0-1.54-1.27H5.8v-2.65h.1a1.7 1.7 0 0 0 1.53-1.27 1.7 1.7 0 0 0-.34-1.85l-.07-.07L8.9 6.02l.07.08a1.7 1.7 0 0 0 1.85.33A1.7 1.7 0 0 0 12.09 4.9V4.8h2.65v.1a1.7 1.7 0 0 0 1.27 1.53 1.7 1.7 0 0 0 1.85-.34l.07-.07 1.88 1.87-.08.07A1.7 1.7 0 0 0 19.4 9.8a1.7 1.7 0 0 0 1.54 1.27h.1v2.65h-.1A1.7 1.7 0 0 0 19.4 15Z"/></svg><span>Settings</span></button>
+  <button class="settings-cta" id="headerSignout" type="button" hidden>Sign out</button>
+</header>
+<div id="cloudSaveError" class="banner warn" role="alert" hidden style="margin:12px">Your latest changes may not be synced. Check your connection, then continue editing to retry or reload to restore the last saved version.</div>
+
+<!-- 1 · Pipeline home -->
+<section class="screen active" id="s-home">
+  <div class="rowhead"><div><h2>RFx pipeline</h2><p class="sub" style="margin:4px 0 0">Pick up a live bid, return to a draft, or start a new enquiry.</p></div><button class="btn" id="createRfx">+ Create RFx</button></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>Live RFx</h2><span class="pill p-info">Published · receiving or reviewing responses</span></div><div id="liveList"></div></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>Draft RFx</h2><span class="pill p-mut">Editable · not tracking responses</span></div><div id="draftList"></div></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>Completed and archived RFx</h2><span class="pill p-mut">Awarded bids</span></div><div id="completedList" class="empty">No completed RFx yet.</div></div>
+</section>
+
+<!-- 2 · Create RFx (drafter) -->
+<section class="screen" id="s-draft">
+  <span class="backlink" data-go="s-home">← Pipeline</span>
+  <div class="rowhead"><h2>Create RFx</h2><span class="pill p-info">Draft · not published</span></div>
+  <div class="workspace">
+    <aside class="card chat-panel"><h2>Buyer conversation</h2>
+      <div class="chat" id="draftChat"></div>
+      <form class="composer" id="draftForm"><input id="draftInput" aria-label="Message the co-pilot" placeholder="Describe a change to the RFx…"><button class="btn" type="submit">Send</button></form>
+    </aside>
+    <div class="workspace-content">
+      <div class="card draft-preview"><div class="rowhead"><h2>RFx draft</h2><span class="pill p-info" id="draftLineCount">0 lines</span></div>
+        <div class="meta" id="draftHeaderMeta"></div>
+        <div id="draftSpecFlag"></div>
+        <div class="hscroll" style="max-height:410px"><table id="draftPreview"><thead><tr><th>Line</th><th>Part</th><th>Qty</th><th>Delivery location</th><th>Notes / status</th></tr></thead><tbody></tbody></table></div>
+        <div class="btnrow"><button class="btn ghost" id="discardDraft">Discard draft</button><button class="btn" data-go="s-review">Review RFx →</button></div>
+      </div>
+      <div class="card"><div class="rowhead"><h2>Questionnaire</h2><span class="pill p-mut" id="draftQCount">0 questions</span></div><div id="draftQuestionPreview" class="sub"></div></div>
+      <div class="card"><div class="rowhead"><h2>Commercial terms</h2><span class="pill p-mut" id="draftTCount">0 clauses</span></div><div id="draftTermsPreview" class="sub"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · Review draft -->
+<section class="screen" id="s-review">
+  <span class="backlink" data-go="s-draft">← Back to draft</span>
+  <div class="rowhead"><div><h2>Review RFx</h2><p class="sub" style="margin:4px 0 0">Check every line before it goes out. Publishing starts response tracking.</p></div>
+    <div class="btnrow"><button class="btn ghost" id="exportMd">Export .md</button><button class="btn ghost" id="exportBundle">Vendor bundle (stub)</button><button class="btn" id="publishBtn">Publish RFx</button></div></div>
+  <div id="reviewDoc"></div>
+</section>
+
+<!-- 4 · Published RFx — read-only view of the published document -->
+<section class="screen" id="s-published">
+  <span class="backlink" data-go="s-home">← Pipeline</span>
+  <div id="publishedHead"></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>Line items</h2><span class="pill p-info" id="pubLinePill"></span></div>
+    <div id="pubSpecFlag"></div>
+    <div class="hscroll" style="max-height:420px"><table id="pubLines"><thead><tr><th>Line</th><th>Part</th><th>Description</th><th class="num">Qty</th><th>Delivery location</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>Questionnaire</h2><span class="pill p-mut" id="pubQPill"></span></div><div id="pubQuestions" class="sub"></div></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>Commercial terms</h2><span class="pill p-mut" id="pubTPill"></span></div><div id="pubTerms" class="sub"></div></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>Responses</h2><span class="pill p-info" id="respPill"></span></div>
+    <div id="trackingBody"></div>
+    <div class="btnrow" style="margin-top:10px"><button class="btn sm" id="reviewRespBtn">Review responses</button><button class="btn sm ghost" id="analystBtn">Ask the analyst</button></div></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>RFx actions</h2></div>
+    <p class="note">Export the RFx bundle for email, portal or other buyer channels.</p>
+    <div class="btnrow"><button class="btn sm ghost" id="exportRfxBundle">Export RFx bundle</button>
+    <button class="btn sm ghost danger" id="deleteRfxBtn">Delete RFx</button></div></div>
+  <div class="modal" id="deleteRfxModal"><div class="card">
+    <h2>Delete this published RFx?</h2>
+    <p id="deleteRfxText"></p>
+    <div class="btnrow" style="margin-top:12px"><button class="btn ghost" id="deleteRfxCancel">Keep RFx</button><button class="btn danger" id="deleteRfxConfirm">Delete RFx and response data</button></div>
+  </div></div>
+</section>
+
+<!-- 5 · Review responses -->
+<section class="screen" id="s-intake">
+  <span class="backlink" data-go="s-published">← RFx</span>
+  <div id="intakeHead"></div>
+  <div id="intakeEmpty"></div>
+  <div id="intakeMain">
+  <div class="pipeline-section"><div class="rowhead"><h2>All submissions</h2><span class="pill p-info" id="recvPill"></span></div>
+    <p class="sub" style="margin:4px 0 10px">Search, sort and filter as responses arrive. Select a vendor to inspect its original files.</p>
+    <div class="controls">
+      <input id="fltSearch" aria-label="Search vendors" placeholder="Search vendors…">
+      <select id="fltIssue" aria-label="Filter by issue"><option value="all">All responses</option><option value="missing">Missing information</option><option value="terms">Different terms</option></select>
+      <select id="fltSort" aria-label="Sort"><option value="name">Vendor name</option><option value="coverage">Most lines quoted</option><option value="price">Lowest shared-line price</option></select>
+    </div>
+    <div class="hscroll"><table id="respTable"><thead><tr><th>Vendor</th><th>Price lines</th><th>Questionnaire</th><th>Documents</th><th>What needs attention</th><th class="num" id="sharedPriceHead">Price on shared lines</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="note" id="compareCta" style="margin-top:10px"></div></div>
+  <div class="pipeline-section"><div class="rowhead"><h2>Needs your attention</h2><span class="pill p-flag" id="checksPill"></span></div>
+    <div id="checksList"></div></div>
+  </div>
+</section>
+
+<!-- 6 · Analysis -->
+<section class="screen" id="s-analysis">
+  <span class="backlink" data-go="s-intake">← Vendor responses</span>
+  <div class="rowhead"><div><h2>Compare responses</h2><p class="sub" style="margin:4px 0 0" id="analysisSub"></p></div><span class="pill p-flag" id="awardStatus">Award review pending</span></div>
+  <div class="workspace">
+    <aside class="card chat-panel"><h2>Ask the analyst</h2>
+      <div class="chat" id="analystChat"></div>
+      <div class="chips" id="sampleChips"></div>
+      <form class="composer" id="analystForm"><input id="analystInput" aria-label="Ask the analyst" placeholder="Ask about price or qualification…"><button class="btn" type="submit">Ask</button></form>
+    </aside>
+      <div class="workspace-content">
+      <div class="card"><div class="rowhead"><h2>Price comparison</h2><span class="pill p-mut" id="priceDenom"></span></div>
+        <div id="priceBars"></div><p class="note" id="priceNote"></p></div>
+      <div class="card"><div class="rowhead"><h2>Vendor review</h2><div><span class="pill p-mut">Buyer records outcomes</span> <button class="btn sm ghost" id="reviewProposalBatch" hidden>Review proposed outcomes</button></div></div><div id="techReview"></div></div>
+      <div class="card" id="awardCard"><div class="rowhead"><h2>Proposed award</h2><span class="pill p-mut" id="awardPill">No proposal</span></div><div id="awardAllocations"></div><div class="btnrow" style="margin-top:10px"><button class="btn sm ghost" id="buildAward">Build allocation</button><button class="btn sm" id="confirmAward">Confirm award</button></div></div>
+      <div class="card" id="analysisChecksCard" hidden><div class="rowhead"><h2>Buyer confirmations</h2><span class="pill p-flag" id="analysisChecksPill"></span></div><div id="analysisChecksList"></div></div>
+      <div class="card"><div class="rowhead"><h2>Evidence gaps to review</h2><span class="pill p-flag" id="gapsPill"></span></div><div id="gapsList"></div></div>
+      <div class="card"><div class="rowhead"><h2>Compare all lines</h2></div>
+        <div class="controls">
+          <input id="lineSearch" aria-label="Search lines" placeholder="Search lines…">
+          <label class="check"><input type="checkbox" id="issuesOnly"> Issues only</label>
+          <div class="vpick" id="vendorPicker"></div>
+          <div class="toggle" id="basisToggle"><button data-mode="comparable" class="on">Comparable ₹/unit</button><button data-mode="asquoted">As-quoted</button></div>
+        </div>
+        <div class="hscroll"><table id="cmpTable"><thead></thead><tbody></tbody></table></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="awardModal"><div class="card">
+  <div class="rowhead"><h2>Confirm RFx award</h2><button class="btn sm ghost" id="awardCancel">Cancel</button></div>
+  <div id="awardSuccess" class="banner" hidden></div>
+  <div id="awardConfirmSummary"></div>
+  <div class="field"><label for="awardRationale">Award rationale (required)</label><textarea id="awardRationale" rows="3" placeholder="Record why this allocation is being selected."></textarea></div>
+  <div class="btnrow"><button class="btn" id="awardConfirmButton">Confirm and complete RFx</button></div>
+</div></div>
+<div class="modal" id="proposalModal"><div class="card">
+  <div class="rowhead"><h2>Review analyst outcome suggestions</h2><button class="btn sm ghost" id="proposalCancel">Cancel</button></div>
+  <p class="sub">These are suggestions only. Confirming applies the selected buyer outcomes; the analyst has not recorded them.</p>
+  <div id="proposalBatchBody"></div>
+  <div class="btnrow"><button class="btn" id="proposalConfirm">Confirm selected outcomes</button></div>
+</div></div>
+
+<!-- Settings modal -->
+<div class="modal" id="settingsModal"><div class="card">
+  <div class="rowhead"><h2>Settings</h2><button class="btn sm ghost" id="settingsClose">Close</button></div>
+  <p class="note">The API key is kept in memory only — it is never saved to this browser or the repo.</p>
+  <div class="field"><label>API base URL</label><input id="setBaseUrl" placeholder="https://api.openai.com/v1"></div>
+  <div class="field"><label>Model</label><input id="setModel" placeholder="gpt-4o-mini"></div>
+  <div class="field"><label>API key</label><input id="setKey" type="password" placeholder="paste at runtime"></div>
+  <div class="field"><label>USD → INR rate</label><input id="setFx" type="number" step="0.01"></div>
+  <div class="field"><label>Rate as of</label><input id="setFxDate" type="date"></div>
+  <div class="field"><label>GST rate (e.g. 0.18)</label><input id="setGst" type="number" step="0.01"></div>
+  <div class="btnrow"><button class="btn" id="settingsSave">Save</button></div>
+  <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+  <h2>Demo data</h2>
+  <p class="note">Secondary utility — load vendor response bundles into the published RFx. Not part of the buyer workflow.</p>
+  <div id="demoRfxLine" class="sub" style="margin:6px 0"></div>
+  <div id="demoVendorList"></div>
+  <div class="btnrow" style="margin-top:10px"><button class="btn sm ghost" id="loadAllDemo">Load all five sample files</button></div>
+</div></div>
+
+<!-- Response viewer modal -->
+<div class="modal" id="rawModal"><div class="card" style="max-width:860px">
+  <div class="rowhead"><h2 id="rawTitle">Response details</h2><button class="btn sm ghost" id="rawClose">Close</button></div>
+  <div id="rawBody"></div>
+  <div class="btnrow" style="margin-top:10px"><a class="btn sm ghost" id="rawDownload" href="#" download>Download original</a><button class="btn sm ghost" id="rawClose2">Close</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+  if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+<script src="supabase-config.js"></script>
+<script type="module" src="js/ui/app.js"></script>
+</body>
+</html>
