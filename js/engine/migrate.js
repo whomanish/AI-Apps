@@ -7,6 +7,42 @@
 
 import { resolveTermSlots } from './composer.js';
 
+// The prepared vendor questionnaires answer the buyer's PSU-supply question
+// under Q-X1. Repair only the matching, unpublished 30-line demo draft; a
+// generic Q-G6 in any other RFx must keep its original identity and wording.
+export function alignDemoPsuQuestion(saved, catalog) {
+  const rfx = saved?.draft?.rfx;
+  const lines = rfx?.lines || [];
+  const questions = rfx?.questions || [];
+  const target = catalog?.questions({ custom: true }).find(q => q.id === 'Q-X1');
+  const old = questions.find(q => q.id === 'Q-G6' && !q.omitted);
+  if (!target || !old || questions.some(q => q.id === 'Q-X1') ||
+      lines.length !== 30 || questions.filter(q => !q.omitted).length !== 17 ||
+      lines[0]?.catalog_ref !== 'JTM0103995251' ||
+      lines[25]?.catalog_ref !== 'JTM0103995251' ||
+      lines.slice(19, 25).some((line, i) => line.catalog_ref !== `KGF-7PLY-0${i + 1}`)) {
+    return saved;
+  }
+  const now = new Date().toISOString();
+  return {
+    ...saved,
+    draft: {
+      ...saved.draft,
+      rfx: {
+        ...rfx,
+        questions: questions.map(q => q === old ? {
+          ...q, id: target.id, text: target.question, source_text: target.question,
+          origin: 'adapted', status: 'needs-review',
+        } : q),
+        history: [...(rfx.history || []), {
+          at: now, kind: 'edit',
+          detail: 'Aligned the PSU-supply question with vendor answer ID Q-X1; wording needs buyer review',
+        }],
+      },
+    },
+  };
+}
+
 export function migrateV1Draft(draft, catalog) {
   if (!draft || !draft.rfx) return draft;
   const now = new Date().toISOString();

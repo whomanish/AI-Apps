@@ -15,6 +15,7 @@ import { renderChatText } from './chat-format.js';
 import { DEFAULT_SETTINGS, VENDORS } from '../engine/config.js';
 import { deriveVendorReviewStatus, responseEvidenceGaps, isActionablePriceFlag, comparableCalculation, conversionRuleText } from './response-view.js';
 import { matchedAnswerSet, deterministicEvidence, QUALIFICATION_STATUSES, buildAwardProposal, migrateV6ReviewState, qualificationGapCount, validateQualificationTransition, applyQualificationTransition } from '../engine/qualification.js';
+import { alignDemoPsuQuestion } from '../engine/migrate.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -30,7 +31,7 @@ async function boot(client) {
   let revision = remote.revision || 0;
   let cloudConflict = false;
   let saveQueue = Promise.resolve();
-  const saved = remote.state ? migrateV6ReviewState(remote.state) : null;
+  const saved = remote.state ? alignDemoPsuQuestion(migrateV6ReviewState(remote.state), catalog) : null;
   store = createStore({
     load: () => saved,
     save: s => {
