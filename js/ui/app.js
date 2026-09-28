@@ -2,6 +2,7 @@
 // Engine never touches the DOM; this file never does normalization math.
 
 import { createStore } from '../engine/store.js';
+import { captureLive, clearLive, activateLive, deleteProject } from '../engine/project-state.js';
 import { connectSharedWorkspace, loadWorkspace, saveWorkspace, uploadOriginal, downloadOriginal } from '../engine/shared-cloud.js';
 import { createCatalog } from '../engine/catalog.js';
 import { publishRfx, rfxToMarkdown, validateForPublish, applyEdit, deliveryLocationGroups } from '../engine/composer.js';
@@ -20,7 +21,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = n => n == null ? '—' : '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-let store, catalog, activeScreen = 's-home', cmpMode = 'comparable';
+let store, catalog, activeScreen = 's-home', cmpMode = 'comparable', deleteTarget = null;
 
 async function boot(client) {
   const data = await (await fetch('data/catalog-seed.json')).json();
@@ -79,7 +80,8 @@ async function boot(client) {
   $('#reviewRespBtn').addEventListener('click', () => go('s-intake'));
   $('#analystBtn').addEventListener('click', () => go('s-analysis'));
   $('#deleteRfxBtn').addEventListener('click', deleteRfx);
-  $('#deleteRfxCancel').addEventListener('click', () => $('#deleteRfxModal').classList.remove('show'));
+  document.body.appendChild($('#deleteRfxModal'));
+  $('#deleteRfxCancel').addEventListener('click', () => { deleteTarget = null; $('#deleteRfxModal').classList.remove('show'); });
   $('#deleteRfxConfirm').addEventListener('click', confirmDeleteRfx);
   $('#buildAward').addEventListener('click', buildAward);
   $('#confirmAward').addEventListener('click', openAwardConfirmation);
@@ -273,47 +275,52 @@ function deliveryGroupsHtml(lines) {
 }
 
 // ---------- 1 · pipeline home ----------
+function deleteIcon(label, attribute, value) {
+  return `<button class="btn sm ghost danger delete-icon" type="button" ${attribute}="${esc(value)}" aria-label="Delete ${esc(label)}" title="Delete ${esc(label)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 4h4m-8 3 1 13h10l1-13M10 11v6m4-6v6"/></svg></button>`;
+}
+
 function renderHome() {
   const s = store.get();
   const live = $('#liveList'), drafts = $('#draftList');
-
-  if (s.rfx) {
-    const r = s.rfx;
-    const intake = s.intake;
-    // Rows come from actually ingested responses — never from fixed vendor slots.
-    const received = Object.values(intake).filter(st => st?.normalized);
-    const lineResp = received.reduce((sum, st) =>
-      sum + st.normalized.lines.filter(l => l.normalized_inr_incl_gst != null).length, 0);
-    const pending = s.confirmations.filter(c => c.status === 'pending').length;
-    const stagePill = received.length
-      ? '<span class="pill p-info">Live · reviewing responses</span>'
-      : '<span class="pill p-mut">Waiting for responses</span>';
-    const nextStep = received.length
-      ? `<button class="btn sm" data-go="s-intake">Review responses</button> <button class="btn sm ghost" data-go="s-published">Open RFx</button>`
-      : `<button class="btn sm" disabled title="Available after the first vendor response is loaded">Review responses</button> <button class="btn sm ghost" data-go="s-published">Open RFx</button>`;
-    live.innerHTML = `<div class="hscroll"><table class="pipeline-table"><thead><tr><th>RFx</th><th>Stage</th><th>Responses</th><th>Needs attention</th><th>Next step</th></tr></thead><tbody>
-      <tr><td><b>${esc(r.title)}</b><br><span class="sub">${rfxIdLine(r)} · ${r.lines.length} lines</span></td>
-      <td>${stagePill}</td>
-      <td>${received.length} received · ${lineResp}/${received.length * r.lines.length || r.lines.length} line responses</td>
-      <td>${pending ? `${pending} buyer check${pending > 1 ? 's' : ''} pending` : 'Nothing pending'}</td>
-      <td>${nextStep}</td></tr>
-      </tbody></table></div>
-      ${received.length ? '' : `<p class="note" style="margin:8px 0 0">Share the RFx with vendors through your own channel, then load each response under Settings → Demo data.</p>`}`;
-  } else {
-    live.innerHTML = `<div class="empty">No live RFx yet. Draft one and publish it to start tracking responses.</div>`;
-  }
-  live.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', () => go(el.dataset.go)));
+  const liveEntries = [
+    ...(s.rfx ? [{ project: captureLive(s), parkedIndex: -1 }] : []),
+    ...(s.otherLive || []).map((project, parkedIndex) => ({ project, parkedIndex })),
+  ];
+  live.innerHTML = liveEntries.length ? `<div class="hscroll"><table class="pipeline-table"><thead><tr><th>RFx</th><th>Stage</th><th>Responses</th><th>Needs attention</th><th>Next step</th></tr></thead><tbody>${liveEntries.map(({ project, parkedIndex }) => {
+    const r = project.rfx;
+    const received = Object.values(project.intake || {}).filter(st => st?.normalized);
+    const lineResp = received.reduce((sum, st) => sum + (st.normalized.lines || []).filter(l => l.normalized_inr_incl_gst != null).length, 0);
+    const pending = (project.confirmations || []).filter(c => c.status === 'pending').length;
+    const stagePill = received.length ? '<span class="pill p-info">Live · reviewing responses</span>' : '<span class="pill p-mut">Waiting for responses</span>';
+    const review = received.length ? `<button class="btn sm" data-open-live="${parkedIndex}" data-dest="s-intake">Review responses</button>` : `<button class="btn sm" disabled title="Available after the first vendor response is loaded">Review responses</button>`;
+    return `<tr><td><b>${esc(r.title)}</b><br><span class="sub">${rfxIdLine(r)} · ${r.lines.length} lines</span></td><td>${stagePill}</td><td>${received.length} received · ${lineResp}/${received.length * r.lines.length || r.lines.length} line responses</td><td>${pending ? `${pending} buyer check${pending > 1 ? 's' : ''} pending` : 'Nothing pending'}</td><td><div class="project-actions">${review}<button class="btn sm ghost" data-open-live="${parkedIndex}" data-dest="s-published">Open RFx</button>${deleteIcon(r.title, 'data-delete-live', r.internal_id)}</div></td></tr>`;
+  }).join('')}</tbody></table></div>` : `<div class="empty">No live RFx yet. Draft one and publish it to start tracking responses.</div>`;
+  live.querySelectorAll('[data-open-live]').forEach(el => el.addEventListener('click', () => {
+    const parkedIndex = Number(el.dataset.openLive);
+    if (parkedIndex >= 0) store.update(state => activateLive(state, parkedIndex));
+    go(el.dataset.dest);
+  }));
+  live.querySelectorAll('[data-delete-live]').forEach(el => el.addEventListener('click', () => {
+    const id = el.dataset.deleteLive;
+    const entry = liveEntries.find(x => x.project.rfx.internal_id === id);
+    if (entry) openDeleteModal({ kind: 'live', id, active: entry.parkedIndex === -1 });
+  }));
 
   if (s.draft) {
     const d = s.draft.rfx;
-    drafts.innerHTML = `<div class="rfx"><div><h3>${esc(d.title)}</h3><div><span class="pill p-info">Saved draft</span><span class="pill p-mut">${d.lines.length} proposed lines</span></div><div class="meta">Continue the conversation or review the RFx before publishing.</div></div><div class="cta"><button class="btn ghost" data-go="s-draft">Continue draft</button></div></div>`;
+    drafts.innerHTML = `<div class="rfx"><div><h3>${esc(d.title)}</h3><div><span class="pill p-info">Saved draft</span><span class="pill p-mut">${d.lines.length} proposed lines</span></div><div class="meta">Continue the conversation or review the RFx before publishing.</div></div><div class="cta project-actions"><button class="btn ghost" data-go="s-draft">Continue draft</button>${deleteIcon(d.title || 'draft', 'data-delete-draft', 'true')}</div></div>`;
   } else {
     drafts.innerHTML = `<div class="empty">No saved drafts. Create one to see how saving and returning works.</div>`;
   }
   drafts.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', () => go(el.dataset.go)));
+  drafts.querySelector('[data-delete-draft]')?.addEventListener('click', () => openDeleteModal({ kind: 'draft' }));
   const completed = s.completed || [];
   $('#completedList').className = completed.length ? '' : 'empty';
-  $('#completedList').innerHTML = completed.length ? completed.map(x => `<div class="rfx"><div><b>${esc(x.title)}</b><div class="meta">${esc(x.id)} · ${x.lineCount} lines · ${x.vendorCount} awarded vendors</div></div><span class="pill p-ok">Completed · awarded</span></div>`).join('') : 'No completed RFx yet.';
+  $('#completedList').innerHTML = completed.length ? completed.map((x, index) => `<div class="rfx"><div><b>${esc(x.title)}</b><div class="meta">${esc(x.rfx?.internal_id || x.id)} · ${x.lineCount} lines · ${x.vendorCount} awarded vendors</div></div><div class="project-actions"><span class="pill p-ok">Completed · awarded</span>${deleteIcon(x.title, 'data-delete-completed', index)}</div></div>`).join('') : 'No completed RFx yet.';
+  $('#completedList').querySelectorAll('[data-delete-completed]').forEach(el => el.addEventListener('click', () => {
+    const x = completed[Number(el.dataset.deleteCompleted)];
+    if (x) openDeleteModal({ kind: 'completed', completedAt: x.completedAt });
+  }));
 }
 
 function newDraft() {
@@ -524,6 +531,8 @@ function publish() {
   store.update(s => {
     // The draft is consumed by publishing: it must not reappear under Draft.
     rfx.specConflict = d.specConflict || null; // keep the visible 340 GSM flag on the read-only view
+    if (s.rfx) s.otherLive = [...(s.otherLive || []), captureLive(s)];
+    clearLive(s);
     s.rfx = rfx;
     s.draft = null;
     s.compare.vendorIds = VENDORS.map(v => v.id);
@@ -1024,31 +1033,44 @@ function renderPublished() {
   }
 }
 
-// Secondary, deliberately non-primary: removes the published RFx and every
-// linked response bundle, confirmation, and analyst message.
 function deleteRfx() {
+  const r = store.get().rfx;
+  if (r) openDeleteModal({ kind: 'live', id: r.internal_id, active: true });
+}
+
+function openDeleteModal(target) {
   const s = store.get();
-  const r = s.rfx;
-  if (!r) return;
-  const n = Object.keys(s.intake).length;
-  $('#deleteRfxText').innerHTML = `This permanently removes <b>${esc(r.title)}</b> (${rfxIdLine(r)}) from this browser, ` +
-    `including ${n ? `<b>${n}</b> loaded vendor response${n > 1 ? 's' : ''}, ` : ''}all buyer checks, and the analyst conversation. ` +
-    `Exported files you already downloaded are not affected. This cannot be undone.`;
+  let title, detail;
+  if (target.kind === 'draft') {
+    if (!s.draft) return;
+    title = s.draft.rfx.title || 'Untitled draft';
+    detail = 'its draft content and buyer conversation';
+  } else if (target.kind === 'completed') {
+    const x = (s.completed || []).find(p => p.completedAt === target.completedAt);
+    if (!x) return;
+    title = x.title;
+    detail = 'its award record and linked response and review data';
+  } else {
+    const p = target.active ? captureLive(s) : (s.otherLive || []).find(x => x.rfx?.internal_id === target.id);
+    if (!p || p.rfx.internal_id !== target.id) return;
+    title = p.rfx.title;
+    detail = 'its loaded response records, buyer checks, review outcomes, and analyst conversation';
+  }
+  deleteTarget = target;
+  $('#deleteRfxModal h2').textContent = `Delete ${target.kind === 'draft' ? 'draft' : 'RFx'}?`;
+  $('#deleteRfxText').innerHTML = `This permanently removes <b>${esc(title)}</b> and ${detail} from the shared workspace. Demo seed files and uploaded vendor-file bytes are not deleted; links from this RFx are removed. This cannot be undone.`;
+  $('#deleteRfxConfirm').textContent = target.kind === 'draft' ? 'Delete this draft' : 'Delete this RFx';
+  $('#deleteRfxCancel').textContent = 'Cancel';
   $('#deleteRfxModal').classList.add('show');
 }
 
 function confirmDeleteRfx() {
-  store.update(s => {
-    s.rfx = null;
-    s.intake = {};
-    s.confirmations = [];
-    s.compare = { vendorIds: [] };
-    s.qualification = {};
-    s.award = null;
-    s.analyst = { messages: [] };
-  });
+  if (!deleteTarget) return;
+  let deleted = false;
+  store.update(s => { deleted = deleteProject(s, deleteTarget); });
   $('#deleteRfxModal').classList.remove('show');
-  toast('Published RFx and linked response data deleted.');
+  deleteTarget = null;
+  toast(deleted ? 'RFx removed from the shared workspace.' : 'RFx changed. Nothing was deleted.');
   go('s-home');
 }
 

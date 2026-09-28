@@ -50,6 +50,7 @@ function pickPersisted(s) {
     settings: { ...s.settings, apiKey: '' },
     draft: s.draft,
     rfx: s.rfx,
+    otherLive: s.otherLive || [],
     intake: s.intake,
     confirmations: s.confirmations,
     qualification: s.qualification,
@@ -66,6 +67,7 @@ export function initialState() {
     settings: { ...DEFAULT_SETTINGS },
     draft: null,        // { messages:[], historyChat:[], rfx:{...}, specConflict }
     rfx: null,          // published RFx: { id, title, lines[], terms[], questions[], header, publishedAt }
+    otherLive: [],      // other published RFx snapshots; one selected RFx stays in rfx
     intake: {},         // vendorId -> { status, extracted[], normalized[], flags[], questionnaire, files, error }
     confirmations: [],  // buyer review queue items
     analyst: { messages: [] },
