@@ -1596,7 +1596,11 @@ $('#authForm').addEventListener('submit', async e => {
   e.preventDefault();
   const button = $('#authSubmit'); button.disabled = true; authError.textContent = '';
   try {
-    const { error } = await cloudClient.auth.signInWithPassword({ email: $('#authEmail').value.trim(), password: $('#authPassword').value });
+    const login = $('#authEmail').value.trim();
+    // Supabase Auth requires an email internally. The public demo ID is only
+    // an alias; its password is checked by Supabase and never stored in code.
+    const email = login.toLowerCase() === 'reviewer' ? 'reviewer@procurement-demo.example' : login;
+    const { error } = await cloudClient.auth.signInWithPassword({ email, password: $('#authPassword').value });
     if (error) throw error;
   } catch (err) { authError.textContent = err.message; }
   finally { button.disabled = false; }
